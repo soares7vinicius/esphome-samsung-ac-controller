@@ -5,3 +5,5 @@
 /secrets.yaml
 /.venv/
 *.log
+*.pyc
+__pycache__/

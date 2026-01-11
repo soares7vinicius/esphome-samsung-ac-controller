@@ -13,8 +13,9 @@ esp32:
 logger:
   level: DEBUG
   logs:
-    ir: INFO
-    samsung_ac: INFO
+    climate.samsung_ac_ir: INFO
+    samsung_ac_sniffer: INFO
+    sensor: INFO
 
 # Enable Home Assistant API
 api:
@@ -69,27 +70,23 @@ script:
       - delay: 350ms
       - light.turn_off: office_room_light
 
-# (Opcional) Receiver IR: mantenha habilitado se quiser re-mapear depois.
-# remote_receiver:
-#   pin:
-#     number: 21
-#     inverted: true
-#     mode:
-#       input: true
-#       pullup: true
-
-#   tolerance: 30%
-#   filter: 100us
-#   filter_symbols: 8
-#   idle: 10ms
-#   buffer_size: 10kb
-#   rmt_symbols: 512
-#   receive_symbols: 512
-
 external_components:
   - source:
       type: local
       path: components
+
+samsung_ac_sniffer:
+  id: samsung_sniffer
+  rx_pin: 21
+  dump_raw: true
+  dump_state: true
+  dump_desc: true
+  rate_limit_ms: 500
+  buffer_size: 2048
+  timeout_ms: 90
+  tolerance_percent: 20
+  min_unknown_size: 300   # ajusta para filtrar ruído curto
+
 
 climate:
   - platform: samsung_ac_ir
@@ -98,3 +95,34 @@ climate:
     ir_pin: 4
     supports_swing_horizontal: true
     supports_swing_vertical: true
+
+
+i2c:
+  sda: 32
+  scl: 33
+  scan: true
+
+sensor:
+  - platform: bmp280_i2c
+    address: 0x76
+    # model: BME280
+    temperature:
+      name: "Office Room Temperature"
+      id: office_room_temperature
+      on_value:
+        then:
+          - logger.log:
+              format: "Temp: %.1f °C"
+              args: [x]
+    # humidity:
+    #   name: "Office Room Humidity"
+    #   id: office_room_humidity
+    #   on_value:
+    #     then:
+    #       - logger.log:
+    #           format: "Hum: %.1f %%"
+    #           args: [x]
+    pressure:
+      name: "Office Room Pressure"
+      id: office_room_pressure
+    update_interval: 10s
