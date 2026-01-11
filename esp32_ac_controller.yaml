@@ -1,0 +1,120 @@
+esphome:
+  name: officeroom
+  libraries:
+    - IRremoteESP8266
+    - IRremoteESP8266@^2.8.6
+
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+  level: DEBUG
+  logs:
+    remote_receiver: INFO
+    remote.samsung: INFO
+    remote.samsung36: INFO
+    remote.nec: INFO
+    remote.pronto: INFO
+    ir: INFO
+    samsung_ac: INFO
+
+# Enable Home Assistant API
+api:
+  password: "5533"
+
+ota:
+  - platform: esphome
+    password: "5533"
+
+wifi:
+  networks:
+    - ssid: "VINICIUS"
+      password: "33221540"
+    - ssid: "Casa Do Kinka"
+      password: "33221540"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Officeroom Fallback Hotspot"
+    password: "wlQo86PsmTfc"
+
+captive_portal:
+
+web_server:
+  port: 80
+
+output:
+  - platform: gpio
+    pin: 18
+    id: led_output
+
+light:
+  - platform: binary
+    name: "Office Room Light"
+    output: led_output
+    id: office_room_light
+
+text_sensor:
+  # Para mapear botões sem entupir o log com RAW, publicamos o Pronto completo no HA.
+  - platform: template
+    name: "Office Room Last IR Pronto"
+    id: last_ir_pronto
+    update_interval: never
+
+script:
+  # Mantém o LED (GPIO18) aceso enquanto houver tráfego IR chegando.
+  # Como o script é `restart`, cada frame recebido reinicia o timer.
+  - id: ir_rx_activity
+    mode: restart
+    then:
+      - light.turn_on: office_room_light
+      - delay: 350ms
+      - light.turn_off: office_room_light
+
+# (Opcional) Receiver IR: mantenha habilitado se quiser re-mapear depois.
+# Se não precisar mais receber IR, você pode comentar este bloco inteiro para economizar RAM/CPU.
+remote_receiver:
+  pin:
+    number: 21
+    inverted: true
+    mode:
+      input: true
+      pullup: true
+
+  tolerance: 30%
+  filter: 100us
+  filter_symbols: 8
+  idle: 10ms
+  buffer_size: 10kb
+  rmt_symbols: 512
+  receive_symbols: 512
+
+# ==========================================================
+# IR TRANSMITTER (Samsung AC via IRremoteESP8266)
+# GPIO escolhido: 4 (seguro e não é strapping pin). Ajuste se necessário.
+# ==========================================================
+# remote_transmitter:
+#   pin: 4
+#   carrier_duty_percent: 50%
+
+# ==========================================================
+# Climate via External Component
+# O antigo `platform: custom` foi removido do ESPHome.
+# Próximo passo: criar um componente externo (local) que implemente um platform de climate
+# usando IRremoteESP8266 (IRSamsungAc) para enviar comandos stateful.
+# ==========================================================
+external_components:
+  - source:
+      type: local
+      path: components
+
+climate:
+  - platform: samsung_ac_ir
+    name: "Office Room AC"
+    id: office_room_ac
+    ir_pin: 4
+    supports_swing_horizontal: true
+    supports_swing_vertical: true
