@@ -13,11 +13,6 @@ esp32:
 logger:
   level: DEBUG
   logs:
-    remote_receiver: INFO
-    remote.samsung: INFO
-    remote.samsung36: INFO
-    remote.nec: INFO
-    remote.pronto: INFO
     ir: INFO
     samsung_ac: INFO
 
@@ -75,37 +70,22 @@ script:
       - light.turn_off: office_room_light
 
 # (Opcional) Receiver IR: mantenha habilitado se quiser re-mapear depois.
-# Se não precisar mais receber IR, você pode comentar este bloco inteiro para economizar RAM/CPU.
-remote_receiver:
-  pin:
-    number: 21
-    inverted: true
-    mode:
-      input: true
-      pullup: true
+# remote_receiver:
+#   pin:
+#     number: 21
+#     inverted: true
+#     mode:
+#       input: true
+#       pullup: true
 
-  tolerance: 30%
-  filter: 100us
-  filter_symbols: 8
-  idle: 10ms
-  buffer_size: 10kb
-  rmt_symbols: 512
-  receive_symbols: 512
+#   tolerance: 30%
+#   filter: 100us
+#   filter_symbols: 8
+#   idle: 10ms
+#   buffer_size: 10kb
+#   rmt_symbols: 512
+#   receive_symbols: 512
 
-# ==========================================================
-# IR TRANSMITTER (Samsung AC via IRremoteESP8266)
-# GPIO escolhido: 4 (seguro e não é strapping pin). Ajuste se necessário.
-# ==========================================================
-# remote_transmitter:
-#   pin: 4
-#   carrier_duty_percent: 50%
-
-# ==========================================================
-# Climate via External Component
-# O antigo `platform: custom` foi removido do ESPHome.
-# Próximo passo: criar um componente externo (local) que implemente um platform de climate
-# usando IRremoteESP8266 (IRSamsungAc) para enviar comandos stateful.
-# ==========================================================
 external_components:
   - source:
       type: local
